@@ -601,6 +601,14 @@ function isCabinSelected(index: number, optionId: string): boolean {
   backdrop-filter: blur(2px);
 }
 
+.booking-complete-overlay :deep(.v-overlay__content) {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .booking-flow-header {
   background: linear-gradient(125deg, #0b4f8a 0%, #164675 46%, #e67e22 100%);
   border-radius: 20px;
