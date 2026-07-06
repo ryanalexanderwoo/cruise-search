@@ -132,6 +132,15 @@ function handleImageError(): void {
       <div class="card-header mb-3">
         <div class="title-rating-wrap">
           <h2 class="text-subtitle-1 text-md-h6 font-weight-bold mb-0 card-title">{{ cruise.itineraryName }}</h2>
+          <v-chip
+            v-if="mode === 'date'"
+            color="error"
+            size="small"
+            variant="flat"
+            class="date-emphasis-chip"
+          >
+            {{ formatDate(earliestDate) }} to {{ formatDate(latestDate) }}
+          </v-chip>
           <div class="d-flex align-center ga-2 rating-wrap">
             <v-rating
               :model-value="reviewRating"
@@ -150,7 +159,7 @@ function handleImageError(): void {
         </div>
       </div>
       <p class="text-caption route-copy mb-2">{{ cruise.itineraryMap }}</p>
-      <p class="text-caption text-medium-emphasis mb-0 d-flex align-center ga-1">
+      <p v-if="mode === 'itinerary'" class="text-caption text-medium-emphasis mb-0 d-flex align-center ga-1">
         <v-icon size="14" icon="mdi-calendar-range" />
         {{ formatDate(earliestDate) }} to {{ formatDate(latestDate) }}
       </p>
@@ -178,14 +187,23 @@ function handleImageError(): void {
 
       <template v-else>
         <v-divider class="my-3" />
+        <div class="text-caption text-medium-emphasis mb-2">Stateroom base prices</div>
         <v-row dense class="price-grid">
           <v-col cols="6">
             <div class="text-caption">Interior</div>
             <div class="text-body-2 font-weight-medium">{{ formatCurrency(cruise.stateroomPricing.interior) }}</div>
           </v-col>
           <v-col cols="6">
+            <div class="text-caption">Oceanview</div>
+            <div class="text-body-2 font-weight-medium">{{ formatCurrency(cruise.stateroomPricing.oceanview) }}</div>
+          </v-col>
+          <v-col cols="6">
             <div class="text-caption">Balcony</div>
             <div class="text-body-2 font-weight-medium">{{ formatCurrency(cruise.stateroomPricing.balcony) }}</div>
+          </v-col>
+          <v-col cols="6">
+            <div class="text-caption">Suite</div>
+            <div class="text-body-2 font-weight-medium">{{ formatCurrency(cruise.stateroomPricing.suite) }}</div>
           </v-col>
         </v-row>
       </template>
@@ -291,6 +309,10 @@ function handleImageError(): void {
 
 .route-copy {
   color: #28557f;
+}
+
+.date-emphasis-chip {
+  font-weight: 700;
 }
 
 .price-wrap {

@@ -11,7 +11,7 @@ import type { SavedCruiseConfig } from '../types/savedCruise'
 
 type ViewMode = 'itinerary' | 'date'
 type PricingMode = 'person' | 'stateroom'
-type SortMode = 'recommended' | 'highestRated' | 'priceLowHigh' | 'priceHighLow'
+type SortMode = 'recommended' | 'highestRated' | 'priceLowHigh' | 'priceHighLow' | 'dateEarliest'
 
 type RoomConfig = {
   adults: number
@@ -230,6 +230,7 @@ const sortOptions: { title: string; value: SortMode }[] = [
   { title: 'Highest Rated', value: 'highestRated' },
   { title: 'Price: Low to High', value: 'priceLowHigh' },
   { title: 'Price: High to Low', value: 'priceHighLow' },
+  { title: 'Date: Earliest First', value: 'dateEarliest' },
 ]
 
 const filteredCruises = computed(() => {
@@ -312,6 +313,10 @@ function compareBySortMode(a: CruiseDeparture, b: CruiseDeparture): number {
     return pricingValue(b) - pricingValue(a)
   }
 
+  if (sortMode.value === 'dateEarliest') {
+    return a.startDate.localeCompare(b.startDate)
+  }
+
   const aSaved = savedIds.value.includes(a.id)
   const bSaved = savedIds.value.includes(b.id)
   if (aSaved !== bSaved) {
@@ -329,7 +334,10 @@ function compareBySortMode(a: CruiseDeparture, b: CruiseDeparture): number {
 const sortedFilteredCruises = computed(() => [...filteredCruises.value].sort(compareBySortMode))
 
 const sortedGroupedByItinerary = computed(() => {
-  const groups = [...groupedByItinerary.value]
+  const groups = [...groupedByItinerary.value].map((group) => ({
+    ...group,
+    departures: [...group.departures].sort(compareBySortMode),
+  }))
 
   return groups.sort((a, b) => {
     if (sortMode.value === 'highestRated') {
@@ -342,6 +350,12 @@ const sortedGroupedByItinerary = computed(() => {
 
     if (sortMode.value === 'priceHighLow') {
       return minPriceInItineraryGroup(b) - minPriceInItineraryGroup(a)
+    }
+
+    if (sortMode.value === 'dateEarliest') {
+      const aDate = a.departures[0]?.startDate ?? ''
+      const bDate = b.departures[0]?.startDate ?? ''
+      return aDate.localeCompare(bDate)
     }
 
     const aSaved = a.departures.some((departure) => savedIds.value.includes(departure.id))
@@ -948,9 +962,6 @@ watch(
     <v-card class="hero-card mb-5 mb-md-6" rounded="xl" elevation="0">
       <v-card-text class="py-7 py-md-9 px-4 px-sm-5 px-md-9">
         <h1 class="text-h4 text-md-h3 font-weight-black mb-2 hero-title">Find your perfect Intrepid voyage</h1>
-        <p class="text-body-2 text-md-body-1 text-medium-emphasis mb-4 hero-copy">
-          Search itineraries, compare sail dates, and estimate room pricing in seconds.
-        </p>
         <v-row class="align-center mt-1" dense>
           <v-col cols="12" md="7">
             <div class="d-flex ga-2 align-center">
@@ -1175,7 +1186,7 @@ watch(
           <v-col v-for="group in sortedGroupedByItinerary" :key="group.itineraryName" cols="12">
             <ResultCard
               mode="itinerary"
-              :cruise="group.leadDeparture"
+              :cruise="group.departures[0] ?? group.leadDeparture"
               :departures="group.departures"
               :image-url="destinationImage(group.leadDeparture.itineraryMap.split('->')[1]?.trim() ?? group.leadDeparture.itineraryName)"
               :is-saved="savedIds.includes(group.leadDeparture.id)"
@@ -1219,7 +1230,7 @@ watch(
         <v-card-title class="d-flex align-center justify-space-between py-3">
           <div class="d-flex align-center ga-2">
             <v-icon icon="mdi-compare" color="secondary" />
-            <span>Compare panel ({{ compareCruises.length }}/4)</span>
+            <span>Compare cruises ({{ compareCruises.length }}/4)</span>
           </div>
           <div class="d-flex align-center ga-2">
             <v-btn

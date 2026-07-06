@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import SavedCruisesView from '../views/SavedCruisesView.vue'
 import BookingLandingView from '../views/BookingLandingView.vue'
 import BookingFlowView from '../views/BookingFlowView.vue'
+import BookingConfirmedView from '../views/BookingConfirmedView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,6 +34,11 @@ const router = createRouter({
       path: '/booking-flow',
       name: 'booking-flow',
       component: BookingFlowView,
+    },
+    {
+      path: '/booking-confirmed',
+      name: 'booking-confirmed',
+      component: BookingConfirmedView,
     },
   ],
 })

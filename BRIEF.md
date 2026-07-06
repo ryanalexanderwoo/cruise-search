@@ -66,6 +66,7 @@ Comprehensive fake dataset as a JSON file (src/data/metrics.json) with 77 cruise
         - Highest Rated - Sorts by highest rated user-reviewed cruises
         - Price: Low to High - Sorts by lowest price first (also sorts the cruise dates lowest price first in the Itinerary View)
         - Price: High to Low - Sorts by highest price first
+    - In Itinerary View, the active sort also applies to the cruise dates shown inside each "Show cruise dates" accordion (e.g. Price: Low to High lists the cheapest departure first within each itinerary group)
 - Applied Filters Summary
   - Display a summary line showing all active filters and searches (search term, selected months, ships, price range, night range)
   - Shows "No filters applied" when no filters are active
@@ -84,6 +85,8 @@ Comprehensive fake dataset as a JSON file (src/data/metrics.json) with 77 cruise
     - "Book now" button (primary orange style) for booking flow
     - Destination image with fallback to default SVG if unavailable
     - Stacked accordion view of cruise dates within each itinerary card
+  - Cruise Date cards show all stateroom base prices: Interior, Oceanview, Balcony, and Suite
+  - Cruise Date cards show the sailing date as a red chip near the cruise title for stronger emphasis
 - Quickview modal
     - Displays cruise itinerary, ship information, and highlighted destinations
     - Cruise date selector with pricing calculator for each date
@@ -104,7 +107,7 @@ Comprehensive fake dataset as a JSON file (src/data/metrics.json) with 77 cruise
 
 ### Body - Features
 - Compare
-    - Once a cruise card is selected to be compared, a "Compare" panel appear pinned at the bottom (maximum 4 selections)
+  - Once a cruise card is selected to be compared, a "Compare cruises" panel appear pinned at the bottom (maximum 4 selections)
     - Contains information about the cruise itinerary, cruise dates, prices, ship name, as well as the destinations visited, and ship highlights 
     - Should have an "Expand" button to expand and see the cruises selected to compare
     - Should have a "Collapse" button to collapse the panel back to its pinned view
@@ -112,7 +115,8 @@ Comprehensive fake dataset as a JSON file (src/data/metrics.json) with 77 cruise
 ### Booking Landing
 - Booking Landing
     - Once the Book Now button is clicked, take user to a Booking Landing page which contains information about the cruise they selected
-    - Contains a Sail Date dropdown so users can switch between available departure dates for that itinerary
+  - Contains a Sail Date dropdown so users can switch between available departure dates for that itinerary
+  - Each Sail Date option includes the lowest base stateroom price for that departure
     - Changing Sail Date updates the selected departure details and recalculates pricing
     - Contains the Staterooms and number of guests they selected
     - Contains the estimated base price as well as a breakdown of price per stateroom and price per person
@@ -182,8 +186,9 @@ The application has been set up with Vue Router (v4) with the following routes:
     - Dropdown of available departures for the selected itinerary
     - Selecting a new date switches the active departure on Booking Landing
     - Duration and date-dependent pricing update immediately when date changes
+    - Each option appends the departure's lowest base stateroom price
   - **Editable Stateroom Configuration**:
-    - Separate card interface for each stateroom (min 1, max 4)
+    - Accordion interface for each stateroom (min 1, max 4), matching Cruise Search styling
     - Add/Remove stateroom buttons (+/- controls with 1-4 stateroom limit)
     - For each stateroom:
       - Type selector dropdown (Interior, Oceanview, Balcony, Suite)
@@ -191,7 +196,7 @@ The application has been set up with Vue Router (v4) with the following routes:
       - Children count with +/- buttons (min 0, max based on room capacity)
       - Price display per stateroom type
     - Remove button per stateroom (disabled if only 1 stateroom remains)
-    - No collapse/expand affordance on stateroom cards
+    - Uses the same accordion affordance and panel styling as Cruise Search
   - Dynamic pricing recalculation as users modify selections:
     - Date change recalculates total based on the selected departure's stateroom pricing
     - Total cruise price across all staterooms
@@ -202,6 +207,7 @@ The application has been set up with Vue Router (v4) with the following routes:
     - Primary total label is "Total Price"
     - "Staterooms" and "Total Guests" are shown on the same line
   - Removed horizontal divider above the "Cruise Details" section
+  - Removed the "Selected Cruise" overline label from the hero image
   - Save Cruise button stores the currently selected departure and stateroom configuration in Saved Cruises
   - Navigation: Back button (left-aligned, returns to home), Save Cruise and Continue buttons on right (Continue proceeds to booking flow with updated values and full stateroom details)
   - Stateroom type label formatter for display (interior → "Interior", etc.)
@@ -222,6 +228,7 @@ The application has been set up with Vue Router (v4) with the following routes:
     - Adults and children counts
   - Cabin variants are presented as vertically stacked selectable cards
     - Each card includes cabin label, price impact, supporting description, and cabin-specific image
+    - Selected cabin card uses a thicker blue border for emphasis
   - Responsive step progress indicator:
     - Desktop uses stepper header
     - Mobile uses compact "Step X of Y" text + progress bar
@@ -234,10 +241,16 @@ The application has been set up with Vue Router (v4) with the following routes:
       - Stateroom and guest counts
       - Base cruise, cabin upgrades, and add-ons line items
       - Price per stateroom and price per person
+    - Running pricing card is shown on cabin and add-on steps, but hidden on the Review & Confirm step
     - All Booking Flow selections immediately update the running bottom total and per-unit breakdown
   - Query parameter parsing to restore user's cruise, stateroom selections, and pricing selection
-  - Navigation: Back button returns to Booking Landing with original query context, Cancel exits flow
+  - Navigation:
+    - Top "Back to Search" button returns to Cruise Search
+    - Footer Back button moves to the previous Booking Flow step and is disabled on the first step
+    - Cancel exits flow
   - Complete Booking button on final step (returns to home upon completion)
+  - Review & Confirm step includes Sail Date in the booking details summary
+  - Review pricing summary is displayed without an outer card container on the right side
   - Currency formatting with locale-aware number formatting
 
 ### Router Behavior Updates
@@ -260,3 +273,5 @@ The application has been set up with Vue Router (v4) with the following routes:
 - Cruise Search state persistence when returning from Booking Landing:
   - Restores View by, Pricing by, Sort by, Search text, and applied filters/ranges
   - Uses sessionStorage to preserve in-session state across route navigation
+ - Added new Sort by option: "Date: Earliest First"
+ - In Itinerary View, the active sort also applies to the cruise dates shown inside each itinerary accordion

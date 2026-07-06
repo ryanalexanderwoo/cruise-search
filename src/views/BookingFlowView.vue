@@ -170,6 +170,7 @@ const selectedCabinTypes = ref<string[]>(
   bookingStaterooms.map((room) => getCabinOptionsForType(room.stateroomType)[0]?.id ?? ''),
 )
 const selectedAddOns = ref<string[]>([])
+const isCompleting = ref(false)
 
 const cabinStepCount = bookingStaterooms.length
 const addOnsStepValue = cabinStepCount + 1
@@ -208,6 +209,12 @@ const addOnOptions = [
   { id: 'excursions', label: 'Shore Excursions Bundle', price: 300 },
 ]
 
+function formatDate(date: string): string {
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(
+    new Date(date),
+  )
+}
+
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -245,8 +252,23 @@ function goBackToBookingLanding(): void {
 }
 
 function completeBooking(): void {
-  // Booking complete - could redirect to confirmation page or back to home
-  router.push('/')
+  if (isCompleting.value) {
+    return
+  }
+
+  isCompleting.value = true
+
+  window.setTimeout(() => {
+    router.push({
+      name: 'booking-confirmed',
+      query: {
+        cruiseId,
+        adults,
+        children,
+        totalPrice: runningTotalPrice.value,
+      },
+    })
+  }, 3000)
 }
 
 function goBack(): void {
@@ -274,6 +296,18 @@ function isCabinSelected(index: number, optionId: string): boolean {
 
 <template>
   <v-container fluid class="booking-flow-page pa-3 pa-sm-5 pa-md-8">
+    <v-overlay
+      :model-value="isCompleting"
+      class="booking-complete-overlay"
+      persistent
+      scrim="rgba(11, 79, 138, 0.45)"
+    >
+      <div class="d-flex flex-column align-center ga-4 text-center">
+        <v-progress-circular indeterminate color="white" size="64" width="6" />
+        <div class="text-h6 text-white font-weight-bold">Confirming your booking...</div>
+      </div>
+    </v-overlay>
+
     <div class="booking-landing-header mb-6">
       <v-btn color="secondary" variant="outlined" prepend-icon="mdi-arrow-left" @click="goBack">
         Back to Search
@@ -285,7 +319,6 @@ function isCabinSelected(index: number, optionId: string): boolean {
 
         <div class="d-flex align-center justify-space-between flex-wrap ga-2 mb-5">
           <h2 class="text-h6 font-weight-bold mb-0">Plan Your Cruise Experience</h2>
-          <v-chip color="secondary" size="small" variant="flat">Secure Booking</v-chip>
         </div>
 
         <div class="step-progress-mobile mb-5">
@@ -395,6 +428,12 @@ function isCabinSelected(index: number, optionId: string): boolean {
                       <div class="text-body-1 font-weight-medium">{{ cruise?.itineraryName }}</div>
                     </div>
                     <div class="mb-3">
+                      <div class="text-body-2 text-medium-emphasis">Sail Date</div>
+                      <div class="text-body-1 font-weight-medium">
+                        {{ cruise ? `${formatDate(cruise.startDate)} – ${formatDate(cruise.endDate)} (${cruise.nights} nights)` : '—' }}
+                      </div>
+                    </div>
+                    <div class="mb-3">
                       <div class="text-body-2 text-medium-emphasis">Guests</div>
                       <div class="text-body-1 font-weight-medium">{{ adults }} Adults, {{ children }} Children</div>
                     </div>
@@ -410,7 +449,7 @@ function isCabinSelected(index: number, optionId: string): boolean {
                     </div>
                   </v-col>
                   <v-col cols="12" md="6">
-                    <v-card variant="outlined" class="pa-4">
+                    <div>
                       <div class="mb-4">
                         <div class="text-body-2 text-medium-emphasis mb-1">Cruise Total</div>
                         <div class="text-h6 font-weight-bold">{{ formatCurrency(totalPrice) }}</div>
@@ -430,7 +469,7 @@ function isCabinSelected(index: number, optionId: string): boolean {
                           {{ formatCurrency(runningTotalPrice) }}
                         </div>
                       </div>
-                    </v-card>
+                    </div>
                   </v-col>
                 </v-row>
               </div>
@@ -438,7 +477,7 @@ function isCabinSelected(index: number, optionId: string): boolean {
           </v-stepper-window>
         </v-stepper>
 
-        <div class="d-flex justify-end mb-6">
+        <div v-if="currentStep !== reviewStepValue" class="d-flex justify-end mb-6">
           <v-card class="pa-4 pricing-card text-right running-price-card">
             <div class="mb-4">
               <div class="text-body-2 text-medium-emphasis mb-1">Total Price</div>
@@ -470,9 +509,10 @@ function isCabinSelected(index: number, optionId: string): boolean {
 
         <div class="d-flex align-center justify-space-between">
           <v-btn
+            :disabled="currentStep === 1"
             variant="text"
             color="secondary"
-            @click="goBackToBookingLanding"
+            @click="previousStep"
           >
             Back
           </v-btn>
@@ -510,6 +550,10 @@ function isCabinSelected(index: number, optionId: string): boolean {
     linear-gradient(180deg, #eef6fc 0%, #f6fafe 58%, #ffffff 100%);
 }
 
+.booking-complete-overlay {
+  backdrop-filter: blur(2px);
+}
+
 .booking-flow-header {
   background: linear-gradient(125deg, #0b4f8a 0%, #164675 46%, #e67e22 100%);
   border-radius: 20px;
@@ -541,7 +585,7 @@ function isCabinSelected(index: number, optionId: string): boolean {
 }
 
 .cabin-option-card--selected {
-  border-color: #0b4f8a;
+  border: 2px solid #0b4f8a;
   box-shadow: 0 10px 18px rgba(11, 79, 138, 0.16);
 }
 
