@@ -972,8 +972,8 @@ watch(
       <v-card-text class="py-7 py-md-9 px-4 px-sm-5 px-md-9">
         <h1 class="text-h4 text-md-h3 font-weight-black mb-2 hero-title">Find your perfect Intrepid voyage</h1>
         <v-row class="align-center mt-1" dense>
-          <v-col cols="12" md="7">
-            <div class="d-flex ga-2 align-center">
+          <v-col cols="12">
+            <div class="d-flex ga-2 align-center w-100">
               <v-text-field
                 v-model="searchQuery"
                 label="Search itineraries, ships, destinations"
@@ -995,7 +995,7 @@ watch(
               </v-btn>
             </div>
           </v-col>
-          <v-col cols="12" md="5">
+          <v-col cols="12">
             <v-card variant="outlined" class="pa-2 pa-md-3 guest-panel h-100">
               <div class="d-flex justify-space-between align-center mb-2">
                 <div class="text-subtitle-2">Staterooms</div>
@@ -1004,7 +1004,7 @@ watch(
                 </div>
               </div>
 
-              <v-expansion-panels variant="accordion">
+              <v-expansion-panels variant="accordion" class="w-100">
                 <v-expansion-panel v-for="(room, index) in staterooms" :key="index" rounded="lg">
                   <template #title>
                     <div class="d-flex align-center justify-space-between w-100 ga-3">
