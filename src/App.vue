@@ -60,6 +60,7 @@ const isDesktop = computed(() => mdAndUp.value)
             <v-list density="compact">
               <v-list-item title="My Profile" />
               <v-list-item title="Saved Cruises" to="/saved-cruises" />
+              <v-list-item title="Booked Cruises" to="/booked-cruises" />
               <v-list-item title="Sign Out" />
             </v-list>
           </v-menu>
@@ -84,6 +85,7 @@ const isDesktop = computed(() => mdAndUp.value)
             <v-list density="compact">
               <v-list-item title="My Profile" />
               <v-list-item title="Saved Cruises" to="/saved-cruises" />
+              <v-list-item title="Booked Cruises" to="/booked-cruises" />
               <v-list-item title="Sign Out" />
             </v-list>
           </v-menu>

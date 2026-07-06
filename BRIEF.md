@@ -3,6 +3,8 @@
 ## Summary
 The cruise line, Intrepid Cruise Lines, is building a cruise search application that is designed primarily for a mobile experience, but should still work for all resolutions. It should have searching and filtering functionality that helps potential cruisers find vacations that match their travel style and budget. Being mainly a mobile experience, the search and filtering functionality is incredibly important when searching for cruises on-the-go with one hand. Users should also be able to save, compare, and shop for cruises.
 
+The experience now includes post-booking confirmation and a dedicated Booked Cruises history page accessible from the user profile menu.
+
 ## Data
 Comprehensive fake dataset as a JSON file (src/data/metrics.json) with 77 cruise departures across 22+ different itineraries, spanning July 2027 through February 2028, including:
 - Price per person based on double occupancy
@@ -66,6 +68,7 @@ Comprehensive fake dataset as a JSON file (src/data/metrics.json) with 77 cruise
         - Highest Rated - Sorts by highest rated user-reviewed cruises
         - Price: Low to High - Sorts by lowest price first (also sorts the cruise dates lowest price first in the Itinerary View)
         - Price: High to Low - Sorts by highest price first
+    - Date: Earliest First - Sorts by earliest sail date first
     - In Itinerary View, the active sort also applies to the cruise dates shown inside each "Show cruise dates" accordion (e.g. Price: Low to High lists the cheapest departure first within each itinerary group)
 - Applied Filters Summary
   - Display a summary line showing all active filters and searches (search term, selected months, ships, price range, night range)
@@ -90,6 +93,7 @@ Comprehensive fake dataset as a JSON file (src/data/metrics.json) with 77 cruise
 - Quickview modal
     - Displays cruise itinerary, ship information, and highlighted destinations
     - Cruise date selector with pricing calculator for each date
+  - Cruise date selector labels include base price in dash format: Start Date - End Date - Base Price
     - Stateroom configuration panel (independent from Search page controls)
         - Add/remove staterooms with +/- buttons
         - Select stateroom type (interior, oceanview, balcony, suite)
@@ -136,6 +140,23 @@ Comprehensive fake dataset as a JSON file (src/data/metrics.json) with 77 cruise
   - Cabin options are displayed as stacked selectable cards with cabin details and cabin-specific images
   - Contains a running price summary at the bottom of the page in the same visual style as Booking Landing pricing
   - Running total updates live and includes Booking Flow selections (cabin upgrades and add-ons)
+  - Review & Confirm step includes a cruise image above the booking summary
+  - Top Back button returns to Cruise Search
+  - Bottom Back button returns to Booking Landing
+  - Complete Booking shows a loading state and then routes to Booking Confirmation
+
+### Booking Confirmation
+- Booking Confirmation page
+  - Shows a green confirmation check icon and heading "Booking confirmed"
+  - Shows a cruise image and booking summary details
+  - CTA button text is "View Booked Cruise"
+  - CTA navigates to the Booked Cruises page
+
+### Booked Cruises
+- Booked Cruises page (from profile menu)
+  - Displays confirmed bookings with cruise images, itinerary details, guests, and pricing
+  - Supports removing individual entries and clearing all entries
+  - Uses persisted local storage so bookings remain after refresh
    
 ### Footer
 - Footer on bottom
@@ -169,8 +190,10 @@ Comprehensive fake dataset as a JSON file (src/data/metrics.json) with 77 cruise
 The application has been set up with Vue Router (v4) with the following routes:
 - `/` (home) → HomeView.vue
 - `/saved-cruises` (saved-cruises) → SavedCruisesView.vue
+- `/booked-cruises` (booked-cruises) → BookedCruisesView.vue
 - `/booking-landing` (booking-landing) → BookingLandingView.vue
 - `/booking-flow` (booking-flow) → BookingFlowView.vue
+- `/booking-confirmed` (booking-confirmed) → BookingConfirmedView.vue
 
 ### Booking Flow Components
 
@@ -246,12 +269,31 @@ The application has been set up with Vue Router (v4) with the following routes:
   - Query parameter parsing to restore user's cruise, stateroom selections, and pricing selection
   - Navigation:
     - Top "Back to Search" button returns to Cruise Search
-    - Footer Back button moves to the previous Booking Flow step and is disabled on the first step
+    - Footer Back button returns to Booking Landing
     - Cancel exits flow
-  - Complete Booking button on final step (returns to home upon completion)
+  - Complete Booking button on final step shows loading and routes to Booking Confirmation
   - Review & Confirm step includes Sail Date in the booking details summary
+  - Review & Confirm step includes cruise image
   - Review pricing summary is displayed without an outer card container on the right side
   - Currency formatting with locale-aware number formatting
+
+#### BookingConfirmedView.vue
+- **Purpose**: Final confirmation screen shown after booking completion
+- **Location**: src/views/BookingConfirmedView.vue
+- **Features**:
+  - Green check icon and heading text: "Booking confirmed"
+  - Cruise image and booking summary (cruise, sail date, guests, total)
+  - CTA button "View Booked Cruise" routes to Booked Cruises
+  - Stores confirmed booking entries into local storage-backed Booked Cruises data
+
+#### BookedCruisesView.vue
+- **Purpose**: Displays confirmed cruise bookings
+- **Location**: src/views/BookedCruisesView.vue
+- **Features**:
+  - Renders booked cruise cards with destination image, itinerary details, and pricing
+  - Shows guest counts and booking date
+  - Supports removing individual bookings and clearing all bookings
+  - Uses dedicated local storage composable for persisted booking history (`useBookedCruises`)
 
 ### Router Behavior Updates
 - Global scroll reset on navigation via Vue Router `scrollBehavior`

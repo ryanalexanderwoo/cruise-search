@@ -1,20 +1,56 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { CruiseDeparture } from '../types/cruise'
+import { useBookedCruises } from '../composables/useBookedCruises'
+import { destinationImageFromItineraryMap } from '../utils/destinationImage'
 import cruiseData from '../data/metrics.json'
 
 const route = useRoute()
 const router = useRouter()
 const cruises = cruiseData as CruiseDeparture[]
+const { addBookedCruise } = useBookedCruises()
 
+const bookingReference = route.query.bookingReference as string
 const cruiseId = route.query.cruiseId as string
 const adults = parseInt(route.query.adults as string) || 0
 const children = parseInt(route.query.children as string) || 0
 const totalPrice = parseInt(route.query.totalPrice as string) || 0
+const pricePerStateroom = parseInt(route.query.pricePerStateroom as string) || 0
+const pricePerPerson = parseInt(route.query.pricePerPerson as string) || 0
 
 const cruise = computed(() => cruises.find((item) => item.id === cruiseId))
 const totalGuests = computed(() => adults + children)
+const cruiseImageUrl = computed(() => {
+  if (!cruise.value) {
+    return '/images/default.jpg'
+  }
+
+  return destinationImageFromItineraryMap(cruise.value.itineraryMap, cruise.value.itineraryName)
+})
+
+onMounted(() => {
+  if (!bookingReference || !cruise.value) {
+    return
+  }
+
+  addBookedCruise({
+    id: bookingReference,
+    cruiseId,
+    itineraryName: cruise.value.itineraryName,
+    itineraryMap: cruise.value.itineraryMap,
+    shipName: cruise.value.shipName,
+    startDate: cruise.value.startDate,
+    endDate: cruise.value.endDate,
+    nights: cruise.value.nights,
+    adults,
+    children,
+    totalPrice,
+    pricePerStateroom,
+    pricePerPerson,
+    bookedAt: new Date().toISOString(),
+  })
+})
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -33,7 +69,7 @@ function formatDate(date: string): string {
 }
 
 function returnToSearch(): void {
-  router.push('/')
+  router.push('/booked-cruises')
 }
 </script>
 
@@ -41,12 +77,13 @@ function returnToSearch(): void {
   <v-container fluid class="booking-confirmed-page pa-3 pa-sm-5 pa-md-8">
     <v-card rounded="xl" elevation="4" class="booking-confirmed-card mx-auto">
       <v-card-text class="pa-6 pa-sm-8 text-center">
-        <v-icon icon="mdi-check-circle" size="72" color="secondary" class="mb-4" />
-        <p class="text-overline text-secondary mb-2">Booking Confirmed</p>
-        <h1 class="text-h4 font-weight-bold mb-3">Your cruise is confirmed</h1>
+        <v-icon icon="mdi-check-circle" size="72" color="success" class="mb-4" />
+        <h1 class="text-h4 font-weight-bold mb-3">Booking confirmed</h1>
         <p class="text-body-1 text-medium-emphasis mb-8">
           {{ cruise?.itineraryName ?? 'Your selected sailing' }} has been successfully booked.
         </p>
+
+        <v-img :src="cruiseImageUrl" height="220" cover rounded="lg" class="mb-8 booking-confirmed-image" />
 
         <v-row class="text-left mb-8" justify="center">
           <v-col cols="12" md="8" lg="7">
@@ -72,7 +109,7 @@ function returnToSearch(): void {
         </v-row>
 
         <v-btn color="primary" variant="flat" size="large" @click="returnToSearch">
-          Back to Cruise Search
+          View Booked Cruise
         </v-btn>
       </v-card-text>
     </v-card>
@@ -92,6 +129,10 @@ function returnToSearch(): void {
   max-width: 920px;
   border: 1px solid rgba(11, 79, 138, 0.12);
   background: rgba(255, 255, 255, 0.97);
+}
+
+.booking-confirmed-image {
+  border: 1px solid rgba(11, 79, 138, 0.14);
 }
 
 .total-highlight {

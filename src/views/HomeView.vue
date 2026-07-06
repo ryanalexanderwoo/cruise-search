@@ -556,6 +556,15 @@ function formatDate(date: string): string {
   return dateFormatter.format(new Date(date))
 }
 
+function basePriceForDeparture(departure: CruiseDeparture): number {
+  return Math.min(
+    departure.stateroomPricing.interior,
+    departure.stateroomPricing.oceanview,
+    departure.stateroomPricing.balcony,
+    departure.stateroomPricing.suite,
+  )
+}
+
 function stateroomTypeLabel(type: keyof StateroomPricing): string {
   const labels: Record<keyof StateroomPricing, string> = {
     interior: 'Interior',
@@ -1369,7 +1378,7 @@ watch(
                   variant="outlined"
                   density="comfortable"
                   class="mb-4"
-                  :items="quickViewCruises.map((item) => ({ title: `${formatDate(item.startDate)} - ${formatDate(item.endDate)}`, value: item.id }))"
+                  :items="quickViewCruises.map((item) => ({ title: `${formatDate(item.startDate)} - ${formatDate(item.endDate)} - ${formatCurrency(basePriceForDeparture(item))}`, value: item.id }))"
                 />
 
                 <div class="d-flex align-center justify-space-between mb-3 ga-2 flex-wrap">

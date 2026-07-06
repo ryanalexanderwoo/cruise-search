@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import type { CruiseDeparture, StateroomPricing } from '../types/cruise'
 import cruiseData from '../data/metrics.json'
+import { destinationImageFromItineraryMap } from '../utils/destinationImage'
 
 const router = useRouter()
 const route = useRoute()
@@ -198,6 +199,13 @@ const addOnCost = computed(() =>
   }, 0),
 )
 const totalGuests = computed(() => Math.max(adults + children, 0))
+const cruiseImageUrl = computed(() => {
+  if (!cruise) {
+    return '/images/default.jpg'
+  }
+
+  return destinationImageFromItineraryMap(cruise.itineraryMap, cruise.itineraryName)
+})
 const runningTotalPrice = computed(() => totalPrice + cabinUpgradeCost.value + addOnCost.value)
 const runningPricePerStateroom = computed(() => (cabinStepCount > 0 ? runningTotalPrice.value / cabinStepCount : 0))
 const runningPricePerPerson = computed(() => (totalGuests.value > 0 ? runningTotalPrice.value / totalGuests.value : 0))
@@ -223,16 +231,50 @@ function formatCurrency(value: number): string {
   }).format(value)
 }
 
-function nextStep(): void {
+function nextStep(event?: Event): void {
   if (currentStep.value < totalStepCount) {
+    const clickedButton = event?.currentTarget as HTMLElement | null
+    clickedButton?.blur()
+
+    const activeElement = document.activeElement as HTMLElement | null
+    activeElement?.blur()
     currentStep.value++
+    scrollStepToTop()
   }
 }
 
-function previousStep(): void {
+function previousStep(event?: Event): void {
   if (currentStep.value > 1) {
+    const clickedButton = event?.currentTarget as HTMLElement | null
+    clickedButton?.blur()
+
+    const activeElement = document.activeElement as HTMLElement | null
+    activeElement?.blur()
     currentStep.value--
+    scrollStepToTop()
   }
+}
+
+function scrollStepToTop(): void {
+  nextTick(() => {
+    const main = document.querySelector('.v-main') as HTMLElement | null
+    const scrollingElement = document.scrollingElement as HTMLElement | null
+
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+    scrollingElement?.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    main?.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+
+    // One delayed pass after step transition paint.
+    window.setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+      scrollingElement?.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      main?.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    }, 40)
+  })
 }
 
 function goBackToBookingLanding(): void {
@@ -259,13 +301,18 @@ function completeBooking(): void {
   isCompleting.value = true
 
   window.setTimeout(() => {
+    const bookingReference = `booking-${Date.now()}`
+
     router.push({
       name: 'booking-confirmed',
       query: {
+        bookingReference,
         cruiseId,
         adults,
         children,
         totalPrice: runningTotalPrice.value,
+        pricePerStateroom: Math.round(runningPricePerStateroom.value),
+        pricePerPerson: Math.round(runningPricePerPerson.value),
       },
     })
   }, 3000)
@@ -421,6 +468,7 @@ function isCabinSelected(index: number, optionId: string): boolean {
             <v-stepper-window-item :value="reviewStepValue">
               <div class="pa-4">
                 <h3 class="text-subtitle-1 font-weight-bold mb-4">Review Your Booking</h3>
+                <v-img :src="cruiseImageUrl" height="220" cover rounded="lg" class="mb-4 review-cruise-image" />
                 <v-row class="mb-6">
                   <v-col cols="12" md="6">
                     <div class="mb-3">
@@ -509,10 +557,9 @@ function isCabinSelected(index: number, optionId: string): boolean {
 
         <div class="d-flex align-center justify-space-between">
           <v-btn
-            :disabled="currentStep === 1"
             variant="text"
             color="secondary"
-            @click="previousStep"
+            @click="goBackToBookingLanding"
           >
             Back
           </v-btn>
@@ -522,7 +569,7 @@ function isCabinSelected(index: number, optionId: string): boolean {
               v-if="currentStep < totalStepCount"
               color="primary"
               variant="flat"
-              @click="nextStep"
+              @click="nextStep($event)"
             >
               Next
             </v-btn>
@@ -619,6 +666,10 @@ function isCabinSelected(index: number, optionId: string): boolean {
 
 .total-highlight {
   color: #e67e22;
+}
+
+.review-cruise-image {
+  border: 1px solid rgba(11, 79, 138, 0.14);
 }
 
 @media (max-width: 959px) {
