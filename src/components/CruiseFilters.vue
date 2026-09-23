@@ -11,6 +11,10 @@ const props = defineProps<{
 
 const selectedMonths = defineModel<string[]>('selectedMonths', { required: true })
 const selectedShips = defineModel<string[]>('selectedShips', { required: true })
+const selectedStateroomTypes = defineModel<string[]>('selectedStateroomTypes', { required: true })
+const startDate = defineModel<string>('startDate', { required: true })
+const endDate = defineModel<string>('endDate', { required: true })
+const maxStops = defineModel<number | null>('maxStops', { required: true })
 const priceRange = defineModel<number[]>('priceRange', { required: true })
 const nightsRange = defineModel<number[]>('nightsRange', { required: true })
 
@@ -100,6 +104,51 @@ function resetNightsRange(): void {
     </div>
 
     <div class="filter-section">
+      <div class="section-title">Sailing dates</div>
+      <div class="date-filter-grid">
+        <v-text-field v-model="startDate" type="date" label="From" variant="outlined" density="compact" hide-details />
+        <v-text-field v-model="endDate" type="date" label="To" variant="outlined" density="compact" hide-details />
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="section-title">Stateroom availability</div>
+      <v-select
+        v-model="selectedStateroomTypes"
+        :items="[
+          { title: 'Interior', value: 'interior' },
+          { title: 'Oceanview', value: 'oceanview' },
+          { title: 'Balcony', value: 'balcony' },
+          { title: 'Suite', value: 'suite' },
+        ]"
+        label="Available types"
+        multiple
+        chips
+        closable-chips
+        variant="outlined"
+        density="compact"
+        hide-details
+      />
+    </div>
+
+    <div class="filter-section">
+      <div class="section-title">Number of stops</div>
+      <v-select
+        v-model="maxStops"
+        :items="[
+          { title: 'Any number of stops', value: null },
+          { title: 'Up to 2 stops', value: 2 },
+          { title: 'Up to 3 stops', value: 3 },
+          { title: 'Up to 4 stops', value: 4 },
+        ]"
+        label="Stops"
+        variant="outlined"
+        density="compact"
+        hide-details
+      />
+    </div>
+
+    <div class="filter-section">
       <div class="section-title">{{ pricingMode === 'stateroom' ? 'Price per stateroom' : 'Price per person' }}</div>
       <v-range-slider
         v-model="priceRange"
@@ -168,6 +217,12 @@ function resetNightsRange(): void {
 .filter-section {
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date-filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
 }
 

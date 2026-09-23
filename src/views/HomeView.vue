@@ -39,6 +39,10 @@ type PersistedHomeState = {
   sortMode: SortMode
   selectedMonths: string[]
   selectedShips: string[]
+  selectedStateroomTypes: string[]
+  startDate: string
+  endDate: string
+  maxStops: number | null
   priceRange: number[]
   nightsRange: number[]
 }
@@ -59,6 +63,10 @@ const pricingMode = ref<PricingMode>('person')
 const staterooms = ref<RoomConfig[]>([{ adults: 2, children: 0, stateroomType: 'interior' }])
 const selectedMonths = ref<string[]>([])
 const selectedShips = ref<string[]>([])
+const selectedStateroomTypes = ref<string[]>([])
+const startDate = ref('')
+const endDate = ref('')
+const maxStops = ref<number | null>(null)
 const priceRange = ref<number[]>([minPrice, maxPrice])
 const nightsRange = ref<number[]>([minNights, maxNights])
 const activeView = ref<ViewMode>('itinerary')
@@ -142,6 +150,13 @@ const appliedFiltersInline = computed(() => {
     parts.push(`Ships: ${selectedShips.value.join(', ')}`)
   }
 
+  if (startDate.value) parts.push(`From: ${formatDate(startDate.value)}`)
+  if (endDate.value) parts.push(`To: ${formatDate(endDate.value)}`)
+  if (selectedStateroomTypes.value.length > 0) {
+    parts.push(`Staterooms: ${selectedStateroomTypes.value.join(', ')}`)
+  }
+  if (maxStops.value !== null) parts.push(`Stops: ${maxStops.value} or fewer`)
+
   if (selectedMinPrice !== minPrice || selectedMaxPrice !== maxPrice) {
     parts.push(`Price (per ${pricingLabel.value}): ${formatCurrency(selectedMinPrice)}-${formatCurrency(selectedMaxPrice)}`)
   }
@@ -161,6 +176,10 @@ const activeFilterCount = computed(() => {
   let count = 0
   count += selectedMonths.value.length
   count += selectedShips.value.length
+  count += selectedStateroomTypes.value.length
+  if (startDate.value) count++
+  if (endDate.value) count++
+  if (maxStops.value !== null) count++
   if (priceRange.value[0] !== minPrice || priceRange.value[1] !== maxPrice) count++
   if (nightsRange.value[0] !== minNights || nightsRange.value[1] !== maxNights) count++
   return count
@@ -179,6 +198,13 @@ const individualFilters = computed(() => {
   selectedShips.value.forEach((ship) => {
     filters.push({ type: 'ship', label: ship, id: ship })
   })
+
+  if (startDate.value) filters.push({ type: 'startDate', label: `From: ${formatDate(startDate.value)}` })
+  if (endDate.value) filters.push({ type: 'endDate', label: `To: ${formatDate(endDate.value)}` })
+  selectedStateroomTypes.value.forEach((type) => {
+    filters.push({ type: 'stateroom', label: `Stateroom: ${type}` , id: type })
+  })
+  if (maxStops.value !== null) filters.push({ type: 'stops', label: `Stops: ${maxStops.value} or fewer` })
   
   if (priceRange.value[0] !== minPrice || priceRange.value[1] !== maxPrice) {
     const [minPriceSelected = minPrice, maxPriceSelected = maxPrice] = priceRange.value
@@ -208,6 +234,14 @@ function removeFilter(filter: (typeof individualFilters.value)[0]): void {
     priceRange.value = [minPrice, maxPrice]
   } else if (filter.type === 'nights') {
     nightsRange.value = [minNights, maxNights]
+  } else if (filter.type === 'startDate') {
+    startDate.value = ''
+  } else if (filter.type === 'endDate') {
+    endDate.value = ''
+  } else if (filter.type === 'stateroom' && filter.id) {
+    selectedStateroomTypes.value = selectedStateroomTypes.value.filter((type) => type !== filter.id)
+  } else if (filter.type === 'stops') {
+    maxStops.value = null
   }
 }
 
@@ -216,6 +250,10 @@ function clearAllFilters(): void {
   selectedShips.value = []
   priceRange.value = [minPrice, maxPrice]
   nightsRange.value = [minNights, maxNights]
+  selectedStateroomTypes.value = []
+  startDate.value = ''
+  endDate.value = ''
+  maxStops.value = null
 }
 
 function clearFilters(): void {
@@ -251,12 +289,19 @@ const filteredCruises = computed(() => {
     const matchesShip =
       selectedShips.value.length === 0 || selectedShips.value.includes(cruise.shipName)
     // Keep filtering on a fixed per-person basis so pricing view mode does not change results.
-    const filterPrice = cruise.pricePerPerson
+    const filterPrice = pricingValue(cruise)
     const matchesPrice = filterPrice >= selectedMinPrice && filterPrice <= selectedMaxPrice
     const matchesNights =
       cruise.nights >= selectedMinNights && cruise.nights <= selectedMaxNights
+    const matchesStartDate = !startDate.value || cruise.startDate >= startDate.value
+    const matchesEndDate = !endDate.value || cruise.startDate <= endDate.value
+    const stopCount = Math.max(cruise.itineraryMap.split('->').length - 2, 0)
+    const matchesStops = maxStops.value === null || stopCount <= maxStops.value
+    const matchesStateroom =
+      selectedStateroomTypes.value.length === 0 ||
+      selectedStateroomTypes.value.some((type) => cruise.stateroomPricing[type as keyof StateroomPricing] > 0)
 
-    return matchesQuery && matchesMonth && matchesShip && matchesPrice && matchesNights
+    return matchesQuery && matchesMonth && matchesShip && matchesPrice && matchesNights && matchesStartDate && matchesEndDate && matchesStops && matchesStateroom
   })
 })
 
@@ -868,6 +913,10 @@ function saveHomeState(): void {
     sortMode: sortMode.value,
     selectedMonths: [...selectedMonths.value],
     selectedShips: [...selectedShips.value],
+    selectedStateroomTypes: [...selectedStateroomTypes.value],
+    startDate: startDate.value,
+    endDate: endDate.value,
+    maxStops: maxStops.value,
     priceRange: [...priceRange.value],
     nightsRange: [...nightsRange.value],
   }
@@ -921,6 +970,14 @@ function restoreHomeState(): void {
       selectedShips.value = parsed.selectedShips.filter((ship): ship is string => typeof ship === 'string')
     }
 
+    if (Array.isArray(parsed.selectedStateroomTypes)) {
+      selectedStateroomTypes.value = parsed.selectedStateroomTypes.filter((type): type is string => typeof type === 'string')
+    }
+
+    if (typeof parsed.startDate === 'string') startDate.value = parsed.startDate
+    if (typeof parsed.endDate === 'string') endDate.value = parsed.endDate
+    if (typeof parsed.maxStops === 'number' || parsed.maxStops === null) maxStops.value = parsed.maxStops
+
     if (
       Array.isArray(parsed.priceRange) &&
       parsed.priceRange.length === 2 &&
@@ -956,6 +1013,10 @@ watch(
     sortMode,
     selectedMonths,
     selectedShips,
+    selectedStateroomTypes,
+    startDate,
+    endDate,
+    maxStops,
     priceRange,
     nightsRange,
   ],
@@ -1087,6 +1148,10 @@ watch(
             <CruiseFilters
               v-model:selected-months="selectedMonths"
               v-model:selected-ships="selectedShips"
+              v-model:selected-stateroom-types="selectedStateroomTypes"
+              v-model:start-date="startDate"
+              v-model:end-date="endDate"
+              v-model:max-stops="maxStops"
               v-model:price-range="priceRange"
               v-model:nights-range="nightsRange"
               :month-options="monthOptions"
@@ -1291,6 +1356,10 @@ watch(
           <CruiseFilters
             v-model:selected-months="selectedMonths"
             v-model:selected-ships="selectedShips"
+            v-model:selected-stateroom-types="selectedStateroomTypes"
+            v-model:start-date="startDate"
+            v-model:end-date="endDate"
+            v-model:max-stops="maxStops"
             v-model:price-range="priceRange"
             v-model:nights-range="nightsRange"
             :month-options="monthOptions"
