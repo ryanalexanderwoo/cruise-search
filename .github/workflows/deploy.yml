@@ -32,10 +32,13 @@ jobs:
       - name: Build Project
         run: npm run build
 
+      - name: Disable Jekyll
+        run: touch ./dist/.nojekyll
+
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './docs' # 👈 Vue builds to the dist folder by default
+          path: './dist' # 👈 Vue builds to the dist folder by default
 
       - name: Deploy to GitHub Pages
         id: deployment
