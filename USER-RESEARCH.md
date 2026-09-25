@@ -12,7 +12,7 @@ Cruise Search’s current filtering options are hindering decision-making.
 
 # Insights
 ## Love is blind? Brand loyalty is a driver of a great website experience
-When users have previously sailed with Celebrity or Royal, they are more likely to be complimentary and forgiving of eCommerce experience. In addition, users express positive feedback about navigation of the website and the ease of booking online. Those users who make it through to the booking funnel report a more positive experience. Those users have strong sentiments of brand loyalty and are more likely to recommend the web booking experience to family and friends.
+When users have previously sailed, they are more likely to be complimentary and forgiving of eCommerce experience. In addition, users express positive feedback about navigation of the website and the ease of booking online. Those users who make it through to the booking funnel report a more positive experience. Those users have strong sentiments of brand loyalty and are more likely to recommend the web booking experience to family and friends.
 
 Why it matters
 - Users have confidence in making a purchase decision
