@@ -53,16 +53,16 @@ Why it matters
 - Customers leave the site and booking funnel and shop elsewhere
 
 ## Users don’t feel recognized & forced to complete repetitive tasks
-Users expect a personalized and authenticated experience to make their shoppingexperience easier.
+Users expect a personalized and authenticated experience to make their shopping experience easier.
 The more effort and data users provide, the greater the need to deliver a rich experience and value exchange.
 - Lack of recognition and forced tore-enter personal information
-- Lack ofpersonalized recommendations, offers, and experiences
+- Lack of personalized recommendations, offers, and experiences
 - Limited ability to support non-linear shopping experiences
 
 Why it matters
 - Users feel frustrated and unappreciated
 - Users feel we are not delivering basic table stakes of account creation
-- Users are forced to repeat tasks instead of advancingwithin the path to purchase
+- Users are forced to repeat tasks instead of advancing within the path to purchase
 
 # Hypothesis
 Cruise Search’s filtering options are not granular enough. The search results produced overwhelms users. They struggle with finding cruises that meet their criteria because they can’t easily filter out pricing options that they don’t want to see. This hinders decision-making because the filtering options aren’t granular enough to keep the things they only want to see.
